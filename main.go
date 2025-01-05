@@ -1,21 +1,26 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
+	"go-go-manager/config"
+	"go-go-manager/db"
+	"log"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
+	"go-go-manager/routes"
 )
 
 func main() {
-	r := gin.Default()
-	r.Use(cors.Default())
+	cfg := config.LoadConfig()
+	database := db.InitDB(cfg)
+	r := routes.SetupRouter()
 
-	r.GET("/hello", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "success",
-		})
-	})
+	defer func() {
+		if err := database.Close(); err != nil {
+			log.Fatalf("Failed to close database connection: %v", err)
+		}
+		log.Println("Database connection closed.")
+	}()
 
-	r.Run(":8888")
+	fmt.Printf("Starting server on port %s...\n", cfg.AppPort)
+	r.Run(":" + cfg.AppPort)
 }
