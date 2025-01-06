@@ -12,6 +12,7 @@ func SetupRouter() *gin.Engine {
 	v1Group := router.Group("/api/v1")
 	{
 		v1Group.POST("/auth", v1.AuthHandler)
+		v1Group.POST("/department", v1.CreateDepartment)
 	}
 
 	return router
