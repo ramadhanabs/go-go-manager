@@ -11,15 +11,16 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-	database := db.InitDB(cfg)
-	r := routes.SetupRouter()
 
+	db.InitDB(cfg)
 	defer func() {
-		if err := database.Close(); err != nil {
+		if err := db.DB.Close(); err != nil {
 			log.Fatalf("Failed to close database connection: %v", err)
 		}
 		log.Println("Database connection closed.")
 	}()
+
+	r := routes.SetupRouter()
 
 	fmt.Printf("Starting server on port %s...\n", cfg.AppPort)
 	r.Run(":" + cfg.AppPort)

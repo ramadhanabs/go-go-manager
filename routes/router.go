@@ -11,7 +11,7 @@ func SetupRouter() *gin.Engine {
 
 	v1Group := router.Group("/api/v1")
 	{
-		v1Group.GET("/users", v1.GetUsers)
+		v1Group.POST("/auth", v1.AuthHandler)
 	}
 
 	return router

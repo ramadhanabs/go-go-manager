@@ -9,19 +9,23 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
-func InitDB(cfg *config.Config) *sql.DB {
+var DB *sql.DB
+
+func InitDB(cfg *config.Config) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DbHost, cfg.DbPort, cfg.DbUser, cfg.DbPass, cfg.DbName)
 
-	db, err := sql.Open("postgres", dsn)
+	var err error
+	DB, err = sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
+		return
 	}
 
-	if err := db.Ping(); err != nil {
+	if err := DB.Ping(); err != nil {
 		log.Fatalf("Database is unreachable: %v", err)
+		return
 	}
 
 	log.Println("Database connected successfully!")
-	return db
 }
