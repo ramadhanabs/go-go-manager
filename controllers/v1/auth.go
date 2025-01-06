@@ -27,7 +27,7 @@ func AuthHandler(c *gin.Context) {
 	case "login":
 		user, err := models.FindUserByEmail(req.Email)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Email not found"})
 			return
 		}
 
@@ -50,6 +50,34 @@ func AuthHandler(c *gin.Context) {
 		})
 	case "signup":
 		// handle signup
+		_, err := models.FindUserByEmail(req.Email)
+		if err != nil {
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hashing password"})
+				return
+			}
+
+			user, err := models.CreateUser(req.Email, string(hashedPassword))
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			token, err := utils.GenerateJWT(user.ID, user.Email)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"email": user.Email,
+				"token": token,
+			})
+		} else {
+			c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+			return
+		}
 
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid action"})
