@@ -18,6 +18,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 		v1Group.GET("/user", v1.GetUsers)
 		v1Group.PATCH("/user", v1.UpdateUser)
 		v1Group.POST("/department", v1.CreateDepartment)
+		v1Group.GET("/department", v1.GetDepartments)
 		v1Group.PATCH("/department/:departmentId", v1.UpdateDepartment)
 		v1Group.DELETE("/department/:departmentId", v1.DeleteDepartment)
 

@@ -4,6 +4,8 @@ import (
 	"go-go-manager/models"
 	"go-go-manager/utils"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,30 +15,97 @@ type DepartmentRequest struct {
 }
 
 func CreateDepartment(c *gin.Context) {
-	var req DepartmentRequest
+	auth := c.GetHeader("Authorization")
+	if auth == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		return
+	}
 
+	if !strings.HasPrefix(auth, "Bearer ") {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
+		return
+	}
+
+	auth = auth[7:]
+	v, err := utils.ValidateJWT(auth)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	var req DepartmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	_, err := models.FindDepartmentByName(req.Name)
-	if err != nil {
-		department, err := models.CreateDepartment(req.Name)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusCreated, gin.H{
-			"departmentId": department.ID,
-			"name":         department.Name,
-		})
-	} else {
-		c.JSON(http.StatusConflict, gin.H{"error": "Department already exist"})
+	if strings.TrimSpace(req.Name) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Department name cannot be empty"})
 		return
 	}
 
+	_, err = models.FindDepartmentByName(req.Name)
+	if err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Department already exists"})
+		return
+	}
+
+	department, err := models.CreateDepartment(req.Name, v.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create department"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"departmentId": department.ID,
+		"name":         department.Name,
+	})
+}
+
+func GetDepartments(c *gin.Context) {
+	auth := c.GetHeader("Authorization")
+	if auth == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		return
+	}
+
+	if !strings.HasPrefix(auth, "Bearer ") {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
+		return
+	}
+
+	auth = auth[7:]
+	v, err := utils.ValidateJWT(auth)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	limit := 5
+	offset := 0
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+	if offsetStr := c.Query("offset"); offsetStr != "" {
+		if parsedOffset, err := strconv.Atoi(offsetStr); err == nil && parsedOffset >= 0 {
+			offset = parsedOffset
+		}
+	}
+	name := c.Query("name")
+
+	departments, err := models.GetDepartments(v.UserID, limit, offset, name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if departments == nil {
+		departments = []models.Department{}
+	}
+
+	c.JSON(http.StatusOK, departments)
 }
 
 type UpdateDepartmentRequest struct {
