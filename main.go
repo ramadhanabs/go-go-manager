@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"go-go-manager/config"
 	"go-go-manager/db"
-	"log"
-
 	"go-go-manager/routes"
+	"log"
 )
 
 func main() {
@@ -20,7 +19,7 @@ func main() {
 		log.Println("Database connection closed.")
 	}()
 
-	r := routes.SetupRouter()
+	r := routes.SetupRouter(db.DB)
 
 	fmt.Printf("Starting server on port %s...\n", cfg.AppPort)
 	r.Run(":" + cfg.AppPort)
