@@ -1,0 +1,8 @@
+ALTER TABLE department
+ADD COLUMN userId INT;
+
+ALTER TABLE department
+ADD CONSTRAINT fk_user
+FOREIGN KEY (userId)
+REFERENCES users(id)
+ON DELETE SET NULL;
