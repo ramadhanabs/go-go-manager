@@ -1,0 +1,5 @@
+ALTER TABLE department
+DROP CONSTRAINT IF EXISTS fk_user;
+
+ALTER TABLE department
+DROP COLUMN IF EXISTS userId;
