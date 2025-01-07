@@ -13,16 +13,53 @@ type Department struct {
 	UpdatedAt string
 }
 
-func CreateDepartment(name string) (Department, error) {
-	query := "INSERT INTO department (name) VALUES ($1) RETURNING id, name"
+func CreateDepartment(name string, userID uint) (Department, error) {
+	query := "INSERT INTO department (name, userid) VALUES ($1, $2) RETURNING id, name"
 
 	var department Department
-	err := db.DB.QueryRow(query, name).Scan(&department.ID, &department.Name)
+	err := db.DB.QueryRow(query, name, userID).Scan(&department.ID, &department.Name)
 	if err != nil {
 		return Department{}, fmt.Errorf("failed to create department: %v", err)
 	}
 
 	return department, nil
+}
+
+func GetDepartments(userID uint, limit int, offset int, name string) ([]Department, error) {
+	query := "SELECT id, name, created_at, updated_at FROM department WHERE userid = $1"
+	params := []interface{}{userID}
+	paramCount := 1
+
+	if name != "" {
+		paramCount++
+		query += fmt.Sprintf(" AND LOWER(name) LIKE LOWER($%d)", paramCount)
+		params = append(params, "%"+name+"%")
+	}
+
+	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", paramCount+1, paramCount+2)
+	params = append(params, limit, offset)
+
+	rows, err := db.DB.Query(query, params...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch departments: %v", err)
+	}
+	defer rows.Close()
+
+	departments := []Department{}
+	for rows.Next() {
+		var dept Department
+		err := rows.Scan(&dept.ID, &dept.Name, &dept.CreatedAt, &dept.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan department: %v", err)
+		}
+		departments = append(departments, dept)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating departments: %v", err)
+	}
+
+	return departments, nil
 }
 
 func FindDepartmentByName(name string) (Department, error) {
