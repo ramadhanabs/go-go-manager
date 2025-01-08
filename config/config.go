@@ -8,12 +8,15 @@ import (
 )
 
 type Config struct {
-	AppPort string
-	DbHost  string
-	DbPort  string
-	DbUser  string
-	DbPass  string
-	DbName  string
+	AppPort    string
+	DbHost     string
+	DbPort     string
+	DbUser     string
+	DbPass     string
+	DbName     string
+	S3Bucket   string
+	S3Endpoint string
+	S3Region   string
 }
 
 func LoadConfig() *Config {
@@ -28,6 +31,10 @@ func LoadConfig() *Config {
 		DbUser:  getEnv("DB_USER", "postgres"),
 		DbPass:  getEnv("DB_PASS", "password"),
 		DbName:  getEnv("DB_NAME", "mydb"),
+
+		S3Bucket:   getEnv("AWS_S3_BUCKET_NAME", ""),
+		S3Endpoint: getEnv("AWS_S3_ENDPOINT", ""),
+		S3Region:   getEnv("AWS_REGION", ""),
 	}
 }
 

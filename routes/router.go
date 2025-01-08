@@ -2,15 +2,17 @@ package routes
 
 import (
 	"database/sql"
+	"go-go-manager/config"
 	v1 "go-go-manager/controllers/v1"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(db *sql.DB) *gin.Engine {
+func SetupRouter(cfg *config.Config, db *sql.DB) *gin.Engine {
 	router := gin.Default()
 
 	employeeHandler := v1.NewEmployeeHandler(db)
+	v1FileHandler := v1.NewFileHandler(cfg)
 
 	v1Group := router.Group("/api/v1")
 	{
@@ -28,6 +30,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 		v1Group.PATCH("/employee/:identityNumber", employeeHandler.UpdateEmployee())
 		v1Group.DELETE("/employee/:identityNumber", employeeHandler.DeleteEmployee())
 
+		v1Group.POST("/file", v1FileHandler.UploadFile)
 	}
 
 	return router

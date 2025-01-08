@@ -19,7 +19,7 @@ func main() {
 		log.Println("Database connection closed.")
 	}()
 
-	r := routes.SetupRouter(db.DB)
+	r := routes.SetupRouter(cfg, db.DB)
 
 	fmt.Printf("Starting server on port %s...\n", cfg.AppPort)
 	r.Run(":" + cfg.AppPort)
