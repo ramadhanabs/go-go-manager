@@ -29,7 +29,7 @@ func LoadConfig() *Config {
 		DbHost:  getEnv("DB_HOST", "localhost"),
 		DbPort:  getEnv("DB_PORT", "5432"),
 		DbUser:  getEnv("DB_USER", "postgres"),
-		DbPass:  getEnv("DB_PASS", "password"),
+		DbPass:  getEnv("DB_PASSWORD", "password"),
 		DbName:  getEnv("DB_NAME", "mydb"),
 
 		S3Bucket:   getEnv("AWS_S3_BUCKET_NAME", ""),
