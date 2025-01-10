@@ -1,2 +1,4 @@
 .env
 docker-compose.yaml
+projectsprint.key
+go_manager.gz
