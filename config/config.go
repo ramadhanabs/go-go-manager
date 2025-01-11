@@ -8,15 +8,17 @@ import (
 )
 
 type Config struct {
-	AppPort    string
-	DbHost     string
-	DbPort     string
-	DbUser     string
-	DbPass     string
-	DbName     string
-	S3Bucket   string
-	S3Endpoint string
-	S3Region   string
+	AppPort            string
+	DbHost             string
+	DbPort             string
+	DbUser             string
+	DbPass             string
+	DbName             string
+	S3Bucket           string
+	S3Endpoint         string
+	S3Region           string
+	AwsAccessKeyId     string
+	AwsSecretAccessKey string
 }
 
 func LoadConfig() *Config {
@@ -32,9 +34,11 @@ func LoadConfig() *Config {
 		DbPass:  getEnv("DB_PASS", "password"),
 		DbName:  getEnv("DB_NAME", "mydb"),
 
-		S3Bucket:   getEnv("AWS_S3_BUCKET_NAME", ""),
-		S3Endpoint: getEnv("AWS_S3_ENDPOINT", ""),
-		S3Region:   getEnv("AWS_REGION", ""),
+		S3Bucket:           getEnv("AWS_S3_BUCKET_NAME", ""),
+		S3Endpoint:         getEnv("AWS_S3_ENDPOINT", ""),
+		S3Region:           getEnv("AWS_REGION", ""),
+		AwsAccessKeyId:     getEnv("AWS_ACCESS_KEY_ID", ""),
+		AwsSecretAccessKey: getEnv("AWS_SECRET_ACCESS_KEY", ""),
 	}
 }
 

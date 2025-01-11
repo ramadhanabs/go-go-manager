@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsSdkCfg "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gin-gonic/gin"
@@ -28,16 +29,23 @@ type FileHandler struct {
 
 func NewFileHandler(cfg *config.Config) *FileHandler {
 	awsCfg, err := awsSdkCfg.LoadDefaultConfig(
-		context.TODO(),
+		context.Background(),
 		awsSdkCfg.WithRegion(cfg.S3Region),
+		awsSdkCfg.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				cfg.AwsAccessKeyId,
+				cfg.AwsSecretAccessKey,
+				"",
+			),
+		),
 	)
 	if err != nil {
 		log.Fatalf("cannot load the AWS configs: %v", err)
 	}
 
 	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
-		o.UsePathStyle = true
-		o.BaseEndpoint = aws.String(cfg.S3Endpoint)
+		// o.UsePathStyle = true
+		// o.BaseEndpoint = aws.String(cfg.S3Endpoint)
 	})
 
 	return &FileHandler{
