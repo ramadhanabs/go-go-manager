@@ -33,7 +33,7 @@ func GetUsers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"user": res})
+	c.JSON(200, res)
 
 }
 
