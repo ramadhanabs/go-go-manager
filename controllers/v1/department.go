@@ -101,11 +101,19 @@ func GetDepartments(c *gin.Context) {
 		return
 	}
 
-	if departments == nil {
-		departments = []models.Department{}
+	response := make([]gin.H, 0)
+	for _, dept := range departments {
+		response = append(response, gin.H{
+			"departmentId": dept.ID,
+			"name":         dept.Name,
+		})
 	}
 
-	c.JSON(http.StatusOK, departments)
+	if len(response) == 0 {
+		response = []gin.H{}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 type UpdateDepartmentRequest struct {
