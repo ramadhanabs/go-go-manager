@@ -186,7 +186,7 @@ func DeleteDepartment(c *gin.Context) {
 	}
 
 	employeeCount, err := models.CountEmployeesByDepartment(departmentId)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows { {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check for associated employees"})
 		return
 	}
