@@ -9,13 +9,12 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsSdkCfg "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,11 +23,12 @@ const maxFileSize = 100 * 1024 // 100 KB
 type FileHandler struct {
 	s3Client *s3.Client
 	s3Bucket string
+	uploader *manager.Uploader
 }
 
 func NewFileHandler(cfg *config.Config) *FileHandler {
 	awsCfg, err := awsSdkCfg.LoadDefaultConfig(
-		context.Background(),
+		context.TODO(),
 		awsSdkCfg.WithRegion(cfg.S3Region),
 		awsSdkCfg.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
@@ -43,14 +43,14 @@ func NewFileHandler(cfg *config.Config) *FileHandler {
 		log.Fatalf("cannot load the AWS configs: %v", err)
 	}
 
-	// s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
-	// 	o.UsePathStyle = true
-	// 	o.BaseEndpoint = aws.String(cfg.S3Endpoint)
-	// })
-
-	s3Client := s3.NewFromConfig(awsCfg)
+	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		// For testing purpose with Localstack
+		// o.UsePathStyle = true
+		// o.BaseEndpoint = aws.String(cfg.S3Endpoint)
+	})
 
 	return &FileHandler{
+		uploader: manager.NewUploader(s3Client),
 		s3Client: s3Client,
 		s3Bucket: cfg.S3Bucket,
 	}
@@ -111,11 +111,6 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 	})
 }
 
-func isValidFileType(filename string) bool {
-	ext := strings.ToLower(strings.TrimSpace(filename[strings.LastIndex(filename, ".")+1:]))
-	return ext == "jpeg" || ext == "jpg" || ext == "png"
-}
-
 func (h *FileHandler) uploadToS3(email string, fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -123,21 +118,49 @@ func (h *FileHandler) uploadToS3(email string, fileHeader *multipart.FileHeader)
 	}
 	defer file.Close()
 
-	input := &s3.PutObjectInput{
-		Bucket: aws.String(h.s3Bucket),
-		Key:    aws.String(fmt.Sprintf("%s/%s", email, fileHeader.Filename)),
-		ACL:    types.ObjectCannedACLPublicRead,
-		Body:   file,
-	}
+	// input := &s3.PutObjectInput{
+	// 	Bucket: aws.String(h.s3Bucket),
+	// 	Key:    aws.String(fmt.Sprintf("%s/%s", email, fileHeader.Filename)),
+	// 	ACL:    types.ObjectCannedACLPublicRead,
+	// 	Body:   file,
+	// }
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
-	defer cancel()
+	contentType := getContentType(fileHeader.Filename)
 
-	_, err = h.s3Client.PutObject(ctx, input)
+	_, err = h.uploader.Upload(context.TODO(), &s3.PutObjectInput{
+		Bucket:      &h.s3Bucket,
+		Key:         aws.String(fmt.Sprintf("%s/%s", email, fileHeader.Filename)),
+		Body:        file,
+		ContentType: &contentType,
+	})
 	if err != nil {
 		return "", err
 	}
 
 	s3URI := fmt.Sprintf("s3://%s/%s/%s", h.s3Bucket, email, fileHeader.Filename)
 	return s3URI, nil
+}
+
+func isValidFileType(filename string) bool {
+	ext := strings.ToLower(strings.TrimSpace(filename[strings.LastIndex(filename, ".")+1:]))
+	return ext == "jpeg" || ext == "jpg" || ext == "png"
+}
+
+func getContentType(filename string) string {
+	ext := filename[strings.LastIndex(filename, ".")+1:]
+	contentTypeMap := map[string]string{
+		"jpg":  "image/jpeg",
+		"jpeg": "image/jpeg",
+		"png":  "image/png",
+		"gif":  "image/gif",
+		"pdf":  "application/pdf",
+		"txt":  "text/plain",
+	}
+
+	contentType := contentTypeMap[ext]
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	return contentType
 }

@@ -18,14 +18,13 @@ func GetUsers(c *gin.Context) {
 	}
 
 	user, err := models.FindUserById(v.UserID)
-	print(user.Email)
 
 	res := models.UserRequest{
 		Email:           user.Email,
-		Name:            user.Name,
-		UserImageUri:    user.UserImageUri,
-		CompanyName:     user.CompanyName,
-		CompanyImageUri: user.CompanyImageUri,
+		Name:            user.Name.String,
+		UserImageUri:    user.UserImageUri.String,
+		CompanyName:     user.CompanyName.String,
+		CompanyImageUri: user.CompanyImageUri.String,
 	}
 
 	if err != nil {
@@ -51,6 +50,18 @@ func UpdateUser(c *gin.Context) {
 	var body models.UserRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	if body.Email == "" || body.Name == "" || body.CompanyName == "" || body.UserImageUri == "" || body.CompanyImageUri == "" {
+		c.JSON(400, gin.H{"error": "All fields are required"})
+		return
+	}
+
+	ed, _ := models.CheckEmailDuplicate(body.Email)
+
+	if ed {
+		c.JSON(400, gin.H{"error": "Email already exists"})
 		return
 	}
 
