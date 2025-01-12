@@ -86,7 +86,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	ed, _ := models.CheckEmailDuplicate(body.Email)
+	ed, _ := models.CheckEmailDuplicate(body.Email, v.UserID)
 
 	if ed {
 		c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
@@ -95,5 +95,6 @@ func UpdateUser(c *gin.Context) {
 
 	models.UpdateProfile(body, v.UserID)
 
-	c.JSON(200, gin.H{"message": "Profile updated successfully"})
+	c.JSON(200, body)
+
 }
