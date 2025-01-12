@@ -9,11 +9,11 @@ import (
 type User struct {
 	ID              uint
 	Email           string
-	Name            string
+	Name            sql.NullString
 	Password        string
-	UserImageUri    string
-	CompanyName     string
-	CompanyImageUri string
+	UserImageUri    sql.NullString
+	CompanyName     sql.NullString
+	CompanyImageUri sql.NullString
 	CreatedAt       string
 	UpdatedAt       string
 }
@@ -55,7 +55,9 @@ func FindUserById(id uint) (User, error) {
 	row := db.DB.QueryRow(query, id)
 
 	err := row.Scan(&user.ID, &user.Email, &user.Name, &user.UserImageUri, &user.CompanyName, &user.CompanyImageUri)
+
 	if err != nil {
+		print(err.Error)
 		if err == sql.ErrNoRows {
 			return User{}, fmt.Errorf("no user found with id: %d", id)
 		}
