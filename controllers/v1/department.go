@@ -105,7 +105,7 @@ func GetDepartments(c *gin.Context) {
 	response := make([]gin.H, 0)
 	for _, dept := range departments {
 		response = append(response, gin.H{
-			"departmentId": dept.ID,
+			"departmentId": strconv.Itoa(int(dept.ID)),
 			"name":         dept.Name,
 		})
 	}
