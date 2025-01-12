@@ -8,7 +8,6 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -53,7 +52,7 @@ func NewFileHandler(cfg *config.Config) *FileHandler {
 
 	return &FileHandler{
 		s3Client: s3Client,
-		s3Bucket: os.Getenv("AWS_S3_BUCKET_NAME"),
+		s3Bucket: cfg.S3Bucket,
 	}
 }
 
@@ -62,14 +61,24 @@ type FileRequest struct {
 }
 
 func (h *FileHandler) UploadFile(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
+	auth := c.GetHeader("Authorization")
+	if auth == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is missing"})
 		return
 	}
 
-	token := strings.TrimPrefix(authHeader, "Bearer ")
-	jwtClaims, err := utils.ValidateJWT(token)
+	if auth == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		return
+	}
+
+	if !strings.HasPrefix(auth, "Bearer ") {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
+		return
+	}
+
+	auth = auth[7:]
+	v, err := utils.ValidateJWT(auth)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -91,7 +100,7 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	uri, err := h.uploadToS3(jwtClaims.Email, fileHeader)
+	uri, err := h.uploadToS3(v.Email, fileHeader)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
