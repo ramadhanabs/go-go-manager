@@ -130,7 +130,7 @@ func (h *FileHandler) uploadToS3(email string, fileHeader *multipart.FileHeader)
 		Body:   file,
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Minute*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 
 	_, err = h.s3Client.PutObject(ctx, input)
