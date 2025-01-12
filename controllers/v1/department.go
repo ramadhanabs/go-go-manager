@@ -185,8 +185,17 @@ func UpdateDepartment(c *gin.Context) {
 }
 
 func DeleteDepartment(c *gin.Context) {
-
 	auth := c.GetHeader("Authorization")
+	if auth == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		return
+	}
+
+	if !strings.HasPrefix(auth, "Bearer ") {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
+		return
+	}
+
 	auth = auth[7:]
 
 	v, err := utils.ValidateJWT(auth)
