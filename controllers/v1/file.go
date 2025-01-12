@@ -38,6 +38,7 @@ func NewFileHandler(cfg *config.Config) *FileHandler {
 				"",
 			),
 		),
+		awsSdkCfg.WithClientLogMode(aws.LogRequest|aws.LogResponse), // dev mode
 	)
 	if err != nil {
 		log.Fatalf("cannot load the AWS configs: %v", err)
@@ -120,7 +121,7 @@ func (h *FileHandler) uploadToS3(email string, fileHeader *multipart.FileHeader)
 		Body:   file,
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Minute*2)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Minute*5)
 	defer cancel()
 
 	_, err = h.s3Client.PutObject(ctx, input)
