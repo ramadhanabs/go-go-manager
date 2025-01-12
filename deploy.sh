@@ -39,6 +39,8 @@ EOF
         echo "Setting up the new build..."
         gunzip $FILE_TO_TRANSFER
         chmod +x $APP_NAME
+        sudo systemctl daemon-reload 
+        sudo systemctl restart app
         echo "Deployment completed on $SERVER!"
 EOF
 
