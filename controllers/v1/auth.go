@@ -12,7 +12,7 @@ import (
 type AuthRequest struct {
 	Email    string `json:"email" binding:"required,email"`               // Validates email format
 	Password string `json:"password" binding:"required,min=8,max=32"`     // Validates presence
-	Action   string `json:"action" binding:"required,oneof=signup login"` // Validates specific values
+	Action   string `json:"action" binding:"required,oneof=create login"` // Validates specific values
 }
 
 func AuthHandler(c *gin.Context) {
@@ -48,7 +48,7 @@ func AuthHandler(c *gin.Context) {
 			"email": user.Email,
 			"token": token,
 		})
-	case "signup":
+	case "create":
 		// handle signup
 		_, err := models.FindUserByEmail(req.Email)
 		if err != nil {
