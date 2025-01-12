@@ -43,10 +43,12 @@ func NewFileHandler(cfg *config.Config) *FileHandler {
 		log.Fatalf("cannot load the AWS configs: %v", err)
 	}
 
-	s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
-		// o.UsePathStyle = true
-		// o.BaseEndpoint = aws.String(cfg.S3Endpoint)
-	})
+	// s3Client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+	// 	o.UsePathStyle = true
+	// 	o.BaseEndpoint = aws.String(cfg.S3Endpoint)
+	// })
+
+	s3Client := s3.NewFromConfig(awsCfg)
 
 	return &FileHandler{
 		s3Client: s3Client,
@@ -90,7 +92,7 @@ func (h *FileHandler) UploadFile(c *gin.Context) {
 
 	uri, err := h.uploadToS3(jwtClaims.Email, fileHeader)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to S3"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
