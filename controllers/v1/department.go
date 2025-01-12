@@ -27,6 +27,11 @@ func CreateDepartment(c *gin.Context) {
 		return
 	}
 
+	if c.GetHeader("Content-Type") != "application/json" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing content-type"})
+		return
+	}
+
 	auth = auth[7:]
 	v, err := utils.ValidateJWT(auth)
 	if err != nil {
@@ -123,6 +128,22 @@ type UpdateDepartmentRequest struct {
 
 func UpdateDepartment(c *gin.Context) {
 	auth := c.GetHeader("Authorization")
+
+	if auth == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
+		return
+	}
+
+	if len(auth) < 7 || auth[:7] != "Bearer " {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header format"})
+		return
+	}
+
+	if c.GetHeader("Content-Type") != "application/json" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing content-type"})
+		return
+	}
+
 	auth = auth[7:]
 
 	v, err := utils.ValidateJWT(auth)
@@ -156,7 +177,7 @@ func UpdateDepartment(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusCreated, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"departmentId": department.ID,
 			"name":         department.Name,
 		})
