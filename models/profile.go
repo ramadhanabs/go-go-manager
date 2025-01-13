@@ -8,9 +8,9 @@ import (
 type UserRequest struct {
 	Email           string `json:"email" binding:"required,email"`
 	Name            string `json:"name" binding:"required,min=4,max=52"`
-	UserImageUri    string `json:"userImageUri" binding:"omitempty,uri"`
+	UserImageUri    string `json:"userImageUri" binding:"omitempty,uri,isImage"`
 	CompanyName     string `json:"companyName" binding:"required,min=4,max=52"`
-	CompanyImageUri string `json:"companyImageUri" binding:"omitempty,uri"`
+	CompanyImageUri string `json:"companyImageUri" binding:"omitempty,uri,isImage"`
 }
 
 func CheckEmailDuplicate(email string, userID uint) (bool, error) {

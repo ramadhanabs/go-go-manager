@@ -130,7 +130,7 @@ func DeleteDepartment(id string) error {
 }
 
 func CountEmployeesByDepartment(departmentId string) (int, error) {
-	query := "SELECT COUNT(*) FROM employee WHERE department_id = $1"
+	query := "SELECT COUNT(*) FROM employees WHERE department_id = $1"
 	var count int
 	err := db.DB.QueryRow(query, departmentId).Scan(&count)
 	if err != nil {

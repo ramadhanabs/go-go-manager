@@ -30,8 +30,13 @@ func (h *EmployeeHandler) CreateEmployee() gin.HandlerFunc {
 			return
 		}
 
+		if c.GetHeader("Content-Type") != "application/json" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing content-type"})
+			return
+		}
+
 		auth = auth[7:] // Remove "Bearer " prefix
-		_, err := utils.ValidateJWT(auth)
+		v, err := utils.ValidateJWT(auth)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
@@ -54,6 +59,13 @@ func (h *EmployeeHandler) CreateEmployee() gin.HandlerFunc {
 		existingEmployee, err := h.Repo.GetEmployeeByIdentityNumber(employee.IdentityNumber)
 		if err == nil && existingEmployee != nil {
 			c.JSON(http.StatusConflict, gin.H{"error": "Identity number conflict"})
+			return
+		}
+
+		// Check department id available or not
+		_, err = models.FindDepartmentById(v.UserID, strconv.Itoa(employee.DepartmentID))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Department ID"})
 			return
 		}
 
@@ -124,6 +136,11 @@ func (h *EmployeeHandler) UpdateEmployee() gin.HandlerFunc {
 		auth := c.GetHeader("Authorization")
 		if auth == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing request token"})
+			return
+		}
+
+		if c.GetHeader("Content-Type") != "application/json" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing content-type"})
 			return
 		}
 
