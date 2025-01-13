@@ -3,8 +3,10 @@ package utils
 import (
 	"errors"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -48,4 +50,16 @@ func ValidateJWT(tokenString string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+func IsImageURI(fl validator.FieldLevel) bool {
+	uri := fl.Field().String()
+	// Check if the URI ends with common image file extensions
+	allowedExtensions := []string{".jpg", ".jpeg", ".png"}
+	for _, ext := range allowedExtensions {
+		if strings.HasSuffix(strings.ToLower(uri), ext) {
+			return true
+		}
+	}
+	return false
 }

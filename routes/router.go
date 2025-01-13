@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"go-go-manager/config"
 	v1 "go-go-manager/controllers/v1"
+	"go-go-manager/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 func SetupRouter(cfg *config.Config, db *sql.DB) *gin.Engine {
@@ -13,6 +16,10 @@ func SetupRouter(cfg *config.Config, db *sql.DB) *gin.Engine {
 
 	employeeHandler := v1.NewEmployeeHandler(db)
 	v1FileHandler := v1.NewFileHandler(cfg)
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("isImage", utils.IsImageURI)
+	}
 
 	v1Group := router.Group("/api/v1")
 	{

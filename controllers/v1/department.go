@@ -2,6 +2,7 @@ package v1
 
 import (
 	"database/sql"
+	"fmt"
 	"go-go-manager/models"
 	"go-go-manager/utils"
 	"net/http"
@@ -217,6 +218,7 @@ func DeleteDepartment(c *gin.Context) {
 	}
 
 	employeeCount, err := models.CountEmployeesByDepartment(departmentId)
+	fmt.Printf("Employee Count => %d", employeeCount)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check for associated employees"})
 		return
