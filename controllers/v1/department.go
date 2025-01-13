@@ -179,7 +179,7 @@ func UpdateDepartment(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"departmentId": string(department.ID),
+			"departmentId": strconv.Itoa(int(department.ID)),
 			"name":         department.Name,
 		})
 	}
