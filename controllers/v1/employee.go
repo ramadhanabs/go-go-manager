@@ -226,8 +226,9 @@ func (h *EmployeeHandler) DeleteEmployee() gin.HandlerFunc {
 		// Proceed with the handler logic
 		identityNumber := c.Param("identityNumber")
 
-		if _, err := h.Repo.GetEmployeeByIdentityNumber(identityNumber); err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Employee not found"})
+		_, err = h.Repo.GetEmployeeByIdentityNumber(identityNumber)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "employee not found"})
 			return
 		}
 
