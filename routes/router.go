@@ -8,17 +8,14 @@ import (
 	"go-go-manager/utils"
 	"log"
 	"net/http"
-	"os"
 
-	awsSdkCfg "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
 
-func SetupRouter(cfg *config.Config, db *sql.DB) *gin.Engine {
+func SetupRouter(cfg *config.Config, db *sql.DB, s3Client *s3.Client, bucketName string) *gin.Engine {
 	router := gin.Default()
 
 	employeeHandler := v1.NewEmployeeHandler(db)
@@ -46,27 +43,6 @@ func SetupRouter(cfg *config.Config, db *sql.DB) *gin.Engine {
 
 		// v1Group.POST("/file", v1FileHandler.UploadFile)
 		v1Group.POST("/file", func(c *gin.Context) {
-			// AWS credentials
-			accessKey := cfg.AwsAccessKeyId
-			secretKey := cfg.AwsSecretAccessKey
-			region := cfg.S3Region
-			bucketName := cfg.S3Bucket
-
-			// Create custom credentials provider
-			credProvider := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
-
-			// Load AWS configuration
-			cfg, err := awsSdkCfg.LoadDefaultConfig(context.TODO(),
-				awsSdkCfg.WithRegion(region),
-				awsSdkCfg.WithCredentialsProvider(credProvider),
-			)
-			if err != nil {
-				log.Fatalf("Unable to load SDK config: %v", err)
-			}
-
-			// Create S3 client
-			client := s3.NewFromConfig(cfg)
-
 			_, fileHeader, err := c.Request.FormFile("file")
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read the file"})
@@ -74,20 +50,22 @@ func SetupRouter(cfg *config.Config, db *sql.DB) *gin.Engine {
 			}
 
 			// Open the file
-			file, err := os.Open(fileHeader.Filename)
+			file, err := fileHeader.Open()
 			if err != nil {
 				log.Fatalf("Unable to open file: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			}
 			defer file.Close()
 
 			// Upload the file
-			_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
+			_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 				Bucket: &bucketName,
 				Key:    &fileHeader.Filename,
 				Body:   file,
 			})
 			if err != nil {
 				log.Fatalf("Unable to upload file to S3: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			}
 		})
 	}
