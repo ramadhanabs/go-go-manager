@@ -129,7 +129,7 @@ func (h *FileHandler) uploadToS3(email string, fileHeader *multipart.FileHeader)
 
 	_, err = h.uploader.Upload(context.TODO(), &s3.PutObjectInput{
 		Bucket:      &h.s3Bucket,
-		Key:         aws.String(fmt.Sprintf("%s/%s", email, fileHeader.Filename)),
+		Key:         &fileHeader.Filename,
 		Body:        file,
 		ContentType: &contentType,
 	})
