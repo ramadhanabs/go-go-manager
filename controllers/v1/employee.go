@@ -76,7 +76,7 @@ func (h *EmployeeHandler) CreateEmployee() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, gin.H{
-			"departmentId":     strconv.Itoa(employee.DepartmentID),
+			"departmentId":     employee.DepartmentID,
 			"name":             employee.Name,
 			"identityNumber":   employee.IdentityNumber,
 			"gender":           employee.Gender,
