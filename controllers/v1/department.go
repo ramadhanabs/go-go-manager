@@ -179,7 +179,7 @@ func UpdateDepartment(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"departmentId": department.ID,
+			"departmentId": string(department.ID),
 			"name":         department.Name,
 		})
 	}

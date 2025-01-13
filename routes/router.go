@@ -1,13 +1,10 @@
 package routes
 
 import (
-	"context"
 	"database/sql"
 	"go-go-manager/config"
 	v1 "go-go-manager/controllers/v1"
 	"go-go-manager/utils"
-	"log"
-	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
@@ -19,7 +16,7 @@ func SetupRouter(cfg *config.Config, db *sql.DB, s3Client *s3.Client, bucketName
 	router := gin.Default()
 
 	employeeHandler := v1.NewEmployeeHandler(db)
-	// v1FileHandler := v1.NewFileHandler(cfg)
+	v1FileHandler := v1.NewFileHandler(cfg)
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("isImage", utils.IsImageURI)
@@ -41,33 +38,33 @@ func SetupRouter(cfg *config.Config, db *sql.DB, s3Client *s3.Client, bucketName
 		v1Group.PATCH("/employee/:identityNumber", employeeHandler.UpdateEmployee())
 		v1Group.DELETE("/employee/:identityNumber", employeeHandler.DeleteEmployee())
 
-		// v1Group.POST("/file", v1FileHandler.UploadFile)
-		v1Group.POST("/file", func(c *gin.Context) {
-			_, fileHeader, err := c.Request.FormFile("file")
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read the file"})
-				return
-			}
+		v1Group.POST("/file", v1FileHandler.UploadFile)
+		// v1Group.POST("/file", func(c *gin.Context) {
+		// 	_, fileHeader, err := c.Request.FormFile("file")
+		// 	if err != nil {
+		// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read the file"})
+		// 		return
+		// 	}
 
-			// Open the file
-			file, err := fileHeader.Open()
-			if err != nil {
-				log.Fatalf("Unable to open file: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			}
-			defer file.Close()
+		// 	// Open the file
+		// 	file, err := fileHeader.Open()
+		// 	if err != nil {
+		// 		log.Fatalf("Unable to open file: %v", err)
+		// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// 	}
+		// 	defer file.Close()
 
-			// Upload the file
-			_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-				Bucket: &bucketName,
-				Key:    &fileHeader.Filename,
-				Body:   file,
-			})
-			if err != nil {
-				log.Fatalf("Unable to upload file to S3: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			}
-		})
+		// 	// Upload the file
+		// 	_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
+		// 		Bucket: &bucketName,
+		// 		Key:    &fileHeader.Filename,
+		// 		Body:   file,
+		// 	})
+		// 	if err != nil {
+		// 		log.Fatalf("Unable to upload file to S3: %v", err)
+		// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// 	}
+		// })
 	}
 
 	return router
