@@ -63,7 +63,7 @@ func (h *EmployeeHandler) CreateEmployee() gin.HandlerFunc {
 		}
 
 		// Check department id available or not
-		_, err = models.FindDepartmentById(v.UserID, strconv.Itoa(employee.DepartmentID))
+		_, err = models.FindDepartmentById(v.UserID, employee.DepartmentID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Department ID"})
 			return
@@ -146,7 +146,7 @@ func (h *EmployeeHandler) GetEmployees() gin.HandlerFunc {
 				IdentityNumber:   employee.IdentityNumber,
 				Name:             employee.Name,
 				Gender:           employee.Gender,
-				DepartmentID:     strconv.Itoa(employee.DepartmentID),
+				DepartmentID:     employee.DepartmentID,
 				EmployeeImageURI: employee.EmployeeImageURI,
 			})
 		}

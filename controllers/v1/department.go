@@ -64,7 +64,7 @@ func CreateDepartment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"departmentId": department.ID,
+		"departmentId": strconv.Itoa(int(department.ID)),
 		"name":         department.Name,
 	})
 }
