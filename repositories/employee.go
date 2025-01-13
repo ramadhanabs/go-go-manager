@@ -54,14 +54,15 @@ func (r *EmployeeRepository) GetEmployeeByIdentityNumber(identityNumber string) 
 func (r *EmployeeRepository) UpdateEmployee(identityNumber string, updatedEmployee models.Employee) error {
 	query := `
 		UPDATE employees
-		SET name = $1, gender = $2, department_id = $3, employee_image_uri = $4
-		WHERE identity_number = $5
+		SET name = $1, gender = $2, department_id = $3, employee_image_uri = $4, identity_number = $5
+		WHERE identity_number = $6
 	`
 	_, err := r.DB.ExecContext(context.Background(), query,
 		updatedEmployee.Name,
 		updatedEmployee.Gender,
 		updatedEmployee.DepartmentID,
 		updatedEmployee.EmployeeImageURI,
+		updatedEmployee.IdentityNumber,
 		identityNumber,
 	)
 	return err
