@@ -75,8 +75,22 @@ func (h *EmployeeHandler) CreateEmployee() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusCreated, employee)
+		c.JSON(http.StatusCreated, gin.H{
+			"departmentId":     strconv.Itoa(employee.DepartmentID),
+			"name":             employee.Name,
+			"identityNumber":   employee.IdentityNumber,
+			"gender":           employee.Gender,
+			"employeeImageUri": employee.EmployeeImageURI,
+		})
 	}
+}
+
+type EmployeeResponse struct {
+	IdentityNumber   string        `json:"identityNumber"`
+	Name             string        `json:"name"`
+	Gender           models.Gender `json:"gender"`
+	DepartmentID     string        `json:"departmentId"`
+	EmployeeImageURI string        `json:"employeeImageUri"`
 }
 
 func (h *EmployeeHandler) GetEmployees() gin.HandlerFunc {
@@ -126,7 +140,18 @@ func (h *EmployeeHandler) GetEmployees() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, employees)
+		response := make([]EmployeeResponse, 0)
+		for _, employee := range employees {
+			response = append(response, EmployeeResponse{
+				IdentityNumber:   employee.IdentityNumber,
+				Name:             employee.Name,
+				Gender:           employee.Gender,
+				DepartmentID:     strconv.Itoa(employee.DepartmentID),
+				EmployeeImageURI: employee.EmployeeImageURI,
+			})
+		}
+
+		c.JSON(http.StatusOK, response)
 	}
 }
 
